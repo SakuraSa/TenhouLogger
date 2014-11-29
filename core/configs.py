@@ -52,6 +52,13 @@ class Configs(object):
                 if value.startswith('"') and value.endswith('"') and len(value) >= 2:
                     value = value[1:len(value) - 1].replace("\\\"", "\"")
                     self.__dict__[name] = value
+                elif value in ["True", "true", "False", "false"]:
+                    if value in ["True", "true"]:
+                        self.__dict__[name] = True
+                    else:
+                        self.__dict__[name] = False
+                else:
+                    self.__dict__[name] = int(value)
 
     @staticmethod
     def instance():
@@ -62,5 +69,5 @@ class Configs(object):
 if __name__ == '__main__':
     print "NOW_CONFIGS: "
     print "path:", CONFIG_PATH_NOW
-    for name, value in Configs.instance().__dict__.iteritems():
-        print name, "=", value
+    for k, v in Configs.instance().__dict__.iteritems():
+        print k, "=", v
