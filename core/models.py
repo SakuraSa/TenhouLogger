@@ -135,7 +135,14 @@ class StatisticCache(Base):
     json = Column(Text, nullable=False)
 
 
-def init():
-    engine = create_engine(configs.database_url, echo=False)
-    Base.metadata.create_all(engine)
-    return engine
+_engine = None
+_Session = None
+
+
+def get_session():
+    global _engine, _Session
+    if not _engine:
+        engine = create_engine(configs.database_url, echo=False)
+        Base.metadata.create_all(engine)
+        _Session = sessionmaker(bind=_engine)
+    return _Session()
