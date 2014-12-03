@@ -94,3 +94,32 @@ def fetch_tenhou_log_string(ref):
     except ValueError, _ex:
         raise FetchError("Illegal json string: %s" % response.text, _ex)
     return response.text
+
+
+RECORDS_REG = re.compile(configs.tenhou_records_regex)
+
+
+@celery.task
+def fetch_tenhou_records(player_name):
+    """
+    fetch one Tenhou player's all records
+    can raise FetchError
+
+    :type player_name: str
+    :param player_name: record's owner-player's name
+    :return: records string
+    """
+    url = configs.tenhou_records_url
+    params = {
+        'name': player_name
+    }
+    response = requests.get(url, params=params)
+    if response.status_code != 200:
+        raise FetchError("Illegal status: [%d]%s" % (response.status_code, response.reason))
+    match = REF_REGEX.search(response.text)
+    if not match:
+        raise FetchError("Illegal response content: can not match with r\"%s\"" % configs.tenhou_records_regex)
+    try:
+        return match.group("records")
+    except IndexError:
+        raise FetchError("Illegal records regex string: do not contains \"records\" group")
