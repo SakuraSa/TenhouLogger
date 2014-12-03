@@ -84,13 +84,13 @@ def fetch_tenhou_log_string(ref):
     params = {
         'ref': ref
     }
-    rsp = requests.get(url, params=params, headers=headers)
-    if rsp.status_code != 200:
-        raise FetchError("Illegal status: [%d]%s" % (rsp.status_code, rsp.reason))
+    response = requests.get(url, params=params, headers=headers)
+    if response.status_code != 200:
+        raise FetchError("Illegal status: [%d]%s" % (response.status_code, response.reason))
     try:
-        if not rsp.text.startswith("{"):
+        if not response.text.startswith("{"):
             raise ValueError("ValueError: json string should begin with '{'")
-        json.loads(rsp.text)
+        json.loads(response.text)
     except ValueError, _ex:
-        raise FetchError("Illegal json string: %s" % rsp.text, _ex)
-    return rsp.text
+        raise FetchError("Illegal json string: %s" % response.text, _ex)
+    return response.text
