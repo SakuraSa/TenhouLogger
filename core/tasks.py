@@ -34,7 +34,7 @@ def celery_test():
 # test celery service
 try:
     celery_test.delay().get(timeout=1)
-except celery_exceptions.TimeoutError, _ex:
+except celery_exceptions.TimeoutError:
     raise ConfigsError("ConfigsError: celery server timeout. maybe server is down.")
 
 
