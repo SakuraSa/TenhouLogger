@@ -38,9 +38,11 @@ except celery_exceptions.TimeoutError:
     raise ConfigsError("ConfigsError: celery server timeout. maybe server is down.")
 
 
-class FetchLogError(Exception):
+class FetchError(Exception):
     """
-    FetchLogError
+    FetchError
+    this exception can be raised when fetching data from other website
+    this exception can carry an inner exception
     """
 
     def __init__(self, message='Fetch Log Error', inner_exception=None):
@@ -52,7 +54,7 @@ class FetchLogError(Exception):
         return self.message
 
     def __repr__(self):
-        return "FetchLogError(%s)" % self.message
+        return "%s(%s)" % (type(self).__name__, self.message)
 
 
 REF_REGEX = re.compile(configs.tenhou_ref_regex)
@@ -62,7 +64,7 @@ REF_REGEX = re.compile(configs.tenhou_ref_regex)
 def fetch_tenhou_log_string(ref):
     """
     fetch Tenhou log's json string
-    can raise FetchLogError
+    can raise FetchError
 
     :type ref: str|unicode
     :rtype: unicode
@@ -71,7 +73,7 @@ def fetch_tenhou_log_string(ref):
     """
     matches = REF_REGEX.findall(ref)
     if not matches:
-        raise FetchLogError("Illegal ref: %s" % ref)
+        raise FetchError("Illegal ref: %s" % ref)
     else:
         ref = matches[0]
     url = configs.tenhou_log_url
@@ -84,11 +86,11 @@ def fetch_tenhou_log_string(ref):
     }
     rsp = requests.get(url, params=params, headers=headers)
     if rsp.status_code != 200:
-        raise FetchLogError("Illegal status: [%d]%s" % (rsp.status_code, rsp.reason))
+        raise FetchError("Illegal status: [%d]%s" % (rsp.status_code, rsp.reason))
     try:
         if not rsp.text.startswith("{"):
             raise ValueError("ValueError: json string should begin with '{'")
         json.loads(rsp.text)
     except ValueError, _ex:
-        raise FetchLogError("Illegal json string: %s" % rsp.text, _ex)
+        raise FetchError("Illegal json string: %s" % rsp.text, _ex)
     return rsp.text
