@@ -59,7 +59,7 @@ REF_REGEX = re.compile(configs.tenhou_ref_regex)
 
 
 @celery.task
-def fetch_tenhou_log(ref):
+def fetch_tenhou_log_string(ref):
     """
     fetch Tenhou log's json string
     can raise FetchLogError
@@ -74,19 +74,21 @@ def fetch_tenhou_log(ref):
         raise FetchLogError("Illegal ref: %s" % ref)
     else:
         ref = matches[0]
-    base = "http://tenhou.net/5/mjlog2json.cgi?%(ref)s"
-    url = base % {'ref': ref}
+    url = configs.tenhou_log_url
     headers = {
-        "Host": "tenhou.net",
+        "Host": url.split("/")[2],
         "Referer": url,
     }
-    rsp = requests.get(url, headers=headers)
+    params = {
+        'ref': ref
+    }
+    rsp = requests.get(url, params=params, headers=headers)
     if rsp.status_code != 200:
         raise FetchLogError("Illegal status: [%d]%s" % (rsp.status_code, rsp.reason))
     try:
         if not rsp.text.startswith("{"):
             raise ValueError("ValueError: json string should begin with '{'")
-        js = json.dumps(rsp.text)
+        json.loads(rsp.text)
     except ValueError, _ex:
         raise FetchLogError("Illegal json string: %s" % rsp.text, _ex)
-    return js
+    return rsp.text
