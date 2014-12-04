@@ -58,8 +58,10 @@ class Role(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(length=64), nullable=False)
 
-    def __init__(self, name):
+    def __init__(self, name, id=None):
         self.name = name
+        if id is not None:
+            self.id = id
 
     def __repr__(self):
         return "<%s[%s]: %s>" % (type(self).__name__, self.id, self.name)
