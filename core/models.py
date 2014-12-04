@@ -162,13 +162,31 @@ class StatisticCache(Base):
 
 
 _engine = None
-_Session = None
+_session_maker = None
+_session = None
 
 
-def get_session():
-    global _engine, _Session
+def get_engine():
+    global _engine
     if not _engine:
-        engine = create_engine(configs.database_url, echo=False)
-        Base.metadata.create_all(engine)
-        _Session = sessionmaker(bind=_engine)
-    return _Session()
+        _engine = create_engine(configs.database_url, echo=False)
+        Base.metadata.create_all(_engine)
+    return _engine
+
+
+def get_session_maker():
+    global _session_maker
+    if not _session_maker:
+        _session_maker = sessionmaker(bind=get_engine())
+    return _session_maker
+
+
+def get_global_session():
+    global _session
+    if not _session:
+        _session = _session_maker()
+    return _session
+
+
+def get_new_session():
+    return get_session_maker()()
