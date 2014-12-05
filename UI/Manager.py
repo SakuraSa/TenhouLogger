@@ -7,6 +7,7 @@ Manager
 
 import os
 import tornado.web
+import Page
 from core.configs import Configs
 
 __author__ = 'Rnd495'
@@ -23,7 +24,7 @@ def mapping(mapping_path):
     :return: page or module
     """
     def wrapper(target):
-        if issubclass(target, tornado.web.RequestHandler):
+        if issubclass(target, Page.PageBase):
             if mapping_path in page_dict:
                 raise KeyError("KeyError: page '%s' is already registered." % mapping_path)
             return page_dict.setdefault(mapping_path, target)
