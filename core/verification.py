@@ -105,6 +105,12 @@ class Verification(object):
                 del self.container[verification_code.uuid]
         return count
 
+    @classmethod
+    def instance(cls):
+        if not hasattr(cls, '__instance__') or not cls.__dict__['__instance__']:
+            cls.__dict__['__instance__'] = cls()
+        return cls.__dict__['__instance__']
+
 
 class VerificationCode(object):
     def __init__(self, code, image, available_count, available_time, case_sensitive, code_alike):
