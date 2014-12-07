@@ -107,9 +107,9 @@ class Verification(object):
 
     @classmethod
     def instance(cls):
-        if not hasattr(cls, '__instance__') or not cls.__dict__['__instance__']:
-            cls.__dict__['__instance__'] = cls()
-        return cls.__dict__['__instance__']
+        if not hasattr(cls, '__instance__'):
+            cls.__instance__ = cls()
+        return cls.__instance__
 
 
 class VerificationCode(object):
