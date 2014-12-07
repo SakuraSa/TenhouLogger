@@ -82,10 +82,7 @@ def fetch_tenhou_log_string(ref):
         "Host": url.split("/")[2],
         "Referer": url,
     }
-    params = {
-        'ref': ref
-    }
-    response = requests.get(url, params=params, headers=headers)
+    response = requests.get(url, params=ref, headers=headers)
     if response.status_code != 200:
         raise FetchError("Illegal status: [%d]%s" % (response.status_code, response.reason))
     try:
