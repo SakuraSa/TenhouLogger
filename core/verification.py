@@ -4,6 +4,8 @@
 """
 core.verification
 """
+import functools
+import tornado.web
 
 __author__ = 'Rnd495'
 
@@ -96,6 +98,7 @@ class Verification(object):
             return True
         if not verification_code.is_available():
             del self.container[verification_code.uuid]
+        return False
 
     def drop(self):
         count = 0
@@ -145,3 +148,16 @@ class VerificationCode(object):
                 if code.lower() == self.code.lower():
                     return True
         return False
+
+
+def check(method):
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        code = self.get_argument("ver_code")
+        uuid = self.get_argument("ver_uuid")
+        success = Verification.instance().check(code, uuid)
+        if not success:
+            raise tornado.web.HTTPError(400, log_message="verification check failed.")
+        else:
+            return method(*args, **kwargs)
+    return wrapper
