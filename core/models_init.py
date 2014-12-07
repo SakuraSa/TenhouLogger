@@ -33,12 +33,12 @@ class InitError(Exception):
 
 
 def init():
+    models.Base.metadata.create_all(models.get_engine())
     session = models.get_global_session()
     if session.query(models.User).count() > 0:
         return
 
     # create role
-    session.delete(models.Role)
     session.add(models.Role(u"站长", 1))
     session.add(models.Role(u"管理员", 2))
     session.add(models.Role(u"会员", 3))
@@ -52,7 +52,6 @@ def init():
     session.commit()
 
     # create model
-    session.delete(models.Model)
     for url, page in UI.Manager.page_dict.iteritems():
         session.add(models.Model(page.__name__, url))
     session.commit()
@@ -60,4 +59,3 @@ def init():
     # create roleAndModel
     for model in session.query(models.Model):
         session.add(models.RoleAndModel(1, model.id))
-
