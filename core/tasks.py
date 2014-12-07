@@ -26,7 +26,7 @@ module_name = os.path.splitext(os.path.split(__file__)[1])[0]
 celery = Celery(module_name, backend=configs.celery_backend_url, broker=configs.celery_broker_url)
 
 
-@celery.task
+@celery.task(name='task.celery_test')
 def celery_test():
     return "ok"
 
@@ -61,7 +61,7 @@ class FetchError(Exception):
 REF_REGEX = re.compile(configs.tenhou_ref_regex)
 
 
-@celery.task
+@celery.task(name='task.fetch_tenhou_log_string')
 def fetch_tenhou_log_string(ref):
     """
     fetch Tenhou log's json string
@@ -97,7 +97,7 @@ def fetch_tenhou_log_string(ref):
 RECORDS_REG = re.compile(configs.tenhou_records_regex)
 
 
-@celery.task
+@celery.task(name='task.fetch_tenhou_records')
 def fetch_tenhou_records(player_name):
     """
     fetch one Tenhou player's all records
