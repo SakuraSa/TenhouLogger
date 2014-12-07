@@ -159,5 +159,5 @@ def check(method):
         if not success:
             raise tornado.web.HTTPError(400, log_message="verification check failed.")
         else:
-            return method(*args, **kwargs)
+            return method(self, *args, **kwargs)
     return wrapper
