@@ -155,7 +155,7 @@ def check(method):
     def wrapper(self, *args, **kwargs):
         code = self.get_argument("ver_code")
         uuid = self.get_argument("ver_uuid")
-        success = Verification.instance().check(code, uuid)
+        success = Verification.instance().check(uuid, code)
         if not success:
             raise tornado.web.HTTPError(400, log_message="verification check failed.")
         else:
