@@ -1,0 +1,5 @@
+<input type="text" id="ver_code" name="ver_code" class="form-control" placeholder="验证码" maxlength="{{ len(code.code) }}" required>
+<div style="display: none">
+  <input type="hidden" name="ver_uuid" value="{{ code.uuid }}">
+  <img id="ver_image" src="{{ code.image }}">
+</div>
