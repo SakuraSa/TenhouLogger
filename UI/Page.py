@@ -12,6 +12,7 @@ import tornado.web
 import core.models
 from core.models import User
 from core.configs import Configs
+from UI.Manager import mapping
 
 configs = Configs.instance()
 
@@ -22,13 +23,13 @@ class PageBase(tornado.web.RequestHandler):
     """
     def __init__(self, application, request, **kwargs):
         tornado.web.RequestHandler.__init__(self, application, request, **kwargs)
-        self._db_session = core.models.get_global_session()
+        self.db = core.models.get_global_session()
         self._current_user = None
 
     def get_current_user(self):
         user_id = self.get_secure_cookie("user_id", None)
         if user_id:
-            self._current_user = self._db_session.query(User).filter(User.id == user_id).first()
+            self._current_user = self.db.query(User).filter(User.id == user_id).first()
         else:
             self._current_user = None
         return self._current_user
@@ -37,8 +38,17 @@ class PageBase(tornado.web.RequestHandler):
         return '/login'
 
     def data_received(self, chunk):
-        """Implement this method to handle streamed request data.
+        return tornado.web.RequestHandler.data_received(self, chunk)
 
-        Requires the `.stream_request_body` decorator.
-        """
-        raise NotImplementedError()
+
+@mapping('/login')
+class PageLogin(PageBase):
+    """
+    PageLogin
+    """
+    def __init__(self, application, request, **kwargs):
+        tornado.web.RequestHandler.__init__(self, application, request, **kwargs)
+
+    def get(self):
+        return self.render('login.html')
+
