@@ -15,13 +15,6 @@ from core.configs import Configs
 
 configs = Configs.instance()
 
-# TODO: add security decorator
-#       @security       ->         check user's role can access this module
-#                                  if can't, raise HTTPError(401)
-#
-# TODO: add HTTPError cather
-#       reset HTTPError behavior
-
 
 class PageBase(tornado.web.RequestHandler):
     """

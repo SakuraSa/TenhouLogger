@@ -9,6 +9,7 @@ __author__ = 'Rnd495'
 
 import models
 from configs import Configs
+import UI.Manager
 
 configs = Configs.instance()
 
@@ -50,6 +51,13 @@ def init():
     session.add(admin_user)
     session.commit()
 
-    # TODO: create Model from UI.Manager
-    # TODO: create RoleAndModel
+    # create model
+    session.delete(models.Model)
+    for url, page in UI.Manager.page_dict.iteritems():
+        session.add(models.Model(page.__name__, url))
+    session.commit()
+
+    # create roleAndModel
+    for model in session.query(models.Model):
+        session.add(models.RoleAndModel(1, model.id))
 

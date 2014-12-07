@@ -75,8 +75,9 @@ class Model(Base):
     url = Column(String(length=128), nullable=False)
     parent_model_id = Column(Integer, default=None)
 
-    def __init__(self, name, parent_model_id):
+    def __init__(self, name, url, parent_model_id=None):
         self.name = name
+        self.url = url
         self.parent_model_id = parent_model_id
 
     def __repr__(self):
