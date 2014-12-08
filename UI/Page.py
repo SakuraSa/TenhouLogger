@@ -8,14 +8,18 @@ Page
 __author__ = 'Rnd495'
 
 import tornado.web
+import tornado.gen
 
 import core.models
 from core import verification
-from core.models import User
+from core import tasks
+from core.models import User, GameLog
 from core.configs import Configs
+from core.celeryIOLoop import CeleryIOLoop
 from UI.Manager import mapping
 
 configs = Configs.instance()
+celery = CeleryIOLoop()
 
 
 class PageBase(tornado.web.RequestHandler):
@@ -70,3 +74,28 @@ class PageLogin(PageBase):
         else:
             self.set_secure_cookie("user_id", str(user.id), expire)
             self.redirect(redirect)
+
+
+@mapping('/api/game_log_ref_upload')
+class APIGameLogRefUpload(PageBase):
+    """
+    APIGameLogRefUpload
+    """
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def post(self):
+        ref = self.get_body_argument('ref')
+        try:
+            if self.db.query(GameLog).filter(GameLog.ref == ref).count() == 0:
+                log_string = yield celery.async(tasks.fetch_tenhou_log_string, ref=ref)
+                current_user = self.get_current_user()
+                current_user_id = current_user.id if current_user else None
+                game_log = GameLog(current_user_id, log_string)
+                self.db.add(game_log)
+                self.db.commit()
+                self.write({'success': True, 'message': 'ok, log fetched.'})
+            self.write({'success': True, 'message': 'canceled ,log already fetched.'})
+        except tasks.FetchError, _ex:
+            self.write({'success': False, 'message': repr(_ex)})
+        finally:
+            self.finish()
