@@ -4,6 +4,7 @@
 """
 core.models
 """
+import json
 
 __author__ = 'Rnd495'
 
@@ -126,6 +127,18 @@ class GameLog(Base):
     rule_cole = Column(String(length=8), nullable=False, index=Index('GameLog_index_rule_cole'))
     ref_code = Column(String(length=32), nullable=False, index=Index('GameLog_index_ref_cole'))
     json = Column(Text, nullable=False)
+
+    def __init__(self, upload_user_id, json_string):
+        self.upload_user_id = upload_user_id
+        self.upload_time = datetime.datetime.now()
+        self.json = json_string
+        self.extract_info_from_json()
+
+    def extract_info_from_json(self):
+        js = json.loads(self.json)
+        self.ref_code = js['ref']
+        time_str, self.rule_cole, self.lobby, uuid = js['ref'].split('-')
+        self.play_time = datetime.datetime.strptime(time_str, '%Y%m%d%Hgm')
 
     def __repr__(self):
         return "<%s[%s]: %s>" % (type(self).__name__, self.id, self.ref_code)
