@@ -10,6 +10,7 @@ __author__ = 'Rnd495'
 import re
 import os
 import json
+import time
 
 import requests
 from celery import exceptions as celery_exceptions
@@ -34,7 +35,10 @@ def celery_test():
 # test celery service
 if not configs.is_celery_server_side:
     try:
+        begin = time.time()
         celery_test.delay().get(timeout=1)
+        cost = (time.time() - begin) * 1000
+        print "celery server is online with %dms lag" % cost
     except celery_exceptions.TimeoutError:
         raise ConfigsError("ConfigsError: celery server timeout. maybe server is down.")
 
