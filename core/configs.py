@@ -16,6 +16,13 @@ import os
 ROOT_PATH = os.path.split(os.path.split(__file__)[0])[0]
 CONFIG_PATH_NOW = os.path.join(ROOT_PATH, "config/now.conf")
 CONFIG_PATH_DEFAULT = os.path.join(ROOT_PATH, "config/default.conf")
+CONFIG_NOTNULL = [
+    'database_url',
+    'celery_broker_url',
+    'celery_backend_url',
+    'init_admin_username',
+    'init_admin_password'
+]
 if not os.path.exists(CONFIG_PATH_NOW):
     # try to copy from default
     import shutil
@@ -59,6 +66,9 @@ class Configs(object):
                         self.__dict__[name] = False
                 else:
                     self.__dict__[name] = int(value)
+        for name in CONFIG_NOTNULL:
+            if not self.__dict__.get(name, None):
+                raise ConfigsError('ConfigsError: property "%s" is not set' % name)
 
     @staticmethod
     def instance():
