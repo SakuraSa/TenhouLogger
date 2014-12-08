@@ -33,10 +33,12 @@ class InitError(Exception):
 
 
 def init():
-    models.Base.metadata.create_all(models.get_engine())
     session = models.get_global_session()
     if session.query(models.User).count() > 0:
         return
+
+    # create table
+    models.Base.metadata.create_all(models.get_engine())
 
     # create role
     session.add(models.Role(u"站长", 1))
