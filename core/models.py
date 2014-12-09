@@ -173,9 +173,9 @@ class GameRecord(Base):
     hash = Column(String(length=32), nullable=False, unique=True)
     lobby = Column(String(length=32), nullable=False, index=Index('GameRecord_index_lobby'))
     play_time = Column(DateTime, nullable=False, index=Index('GameRecord_index_play_time'))
-    time_cost = Column(Integer, nullable=False)
+    time_cost = Column(Integer, default=None)
     rule_name = Column(String(length=32), nullable=False, index=Index('GameRecord_index_rule_name'))
-    ref_code = Column(String(length=32), nullable=False, index=Index('GameRecord_index_ref_cole'))
+    ref_code = Column(String(length=32), default=None, index=Index('GameRecord_index_ref_cole'))
     record_line = Column(String(length=300), nullable=False)
 
     def __init__(self, record_line):
@@ -194,6 +194,9 @@ class GameRecord(Base):
 
     @classmethod
     def get_record_line_hash(cls, record_line):
+        record_line = record_line.strip()
+        if isinstance(record_line, unicode):
+            record_line = record_line.encode('utf-8')
         return hashlib.md5(record_line.strip()).hexdigest()
 
     # noinspection PyTypeChecker
@@ -206,9 +209,9 @@ class GameRecord(Base):
         rule_name = record_line[4]
         ref_code = next(REF_REGEX.finditer(record_line[5])) if record_line[5] != '---' else None
         result = record_line[6]
-        pts = RESULT_PT_REGEX.findall(result)
         names = [name.strip() for name in RESULT_PT_REGEX.split(result)]
-        result = zip(names, pts)
+        # group by 2 pair (hack!)
+        result = zip(*([iter(names)] * 2))
         result.sort(key=lambda pair: pair[1], reverse=True)
         return {
             'lobby': lobby,
