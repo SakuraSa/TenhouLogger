@@ -85,16 +85,11 @@ class APIGameLogRefUpload(PageBase):
     @tornado.gen.coroutine
     def post(self):
         ref = self.get_body_argument('ref')
+        user_id_str = self.get_secure_cookie('user_id', None)
+        user_id = int(user_id_str) if user_id_str else None
         try:
-            if self.db.query(GameLog).filter(GameLog.ref == ref).count() == 0:
-                log_string = yield celery.async(tasks.fetch_tenhou_log_string, ref=ref)
-                current_user = self.get_current_user()
-                current_user_id = current_user.id if current_user else None
-                game_log = GameLog(current_user_id, log_string)
-                self.db.add(game_log)
-                self.db.commit()
-                self.write({'success': True, 'message': 'ok, log fetched.'})
-            self.write({'success': True, 'message': 'canceled ,log already fetched.'})
+            message = yield celery.async(tasks.fetch_and_save_tenhou_log, ref=ref, upload_user_id=user_id)
+            self.write({'success': True, 'message': message})
         except tasks.FetchError, _ex:
             self.write({'success': False, 'message': repr(_ex)})
         finally:

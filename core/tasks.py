@@ -16,6 +16,8 @@ import requests
 from celery import exceptions as celery_exceptions
 from celery import Celery
 
+from models import get_global_session
+from models import GameLog, GameLogAndPlayer, Player, GameRecord, GameRecordAndPlayer
 from configs import Configs, ConfigsError
 
 configs = Configs.instance()
@@ -25,6 +27,10 @@ if not configs.celery_backend_url or not configs.celery_broker_url:
 
 module_name = os.path.splitext(os.path.split(__file__)[1])[0]
 celery = Celery(module_name, backend=configs.celery_backend_url, broker=configs.celery_broker_url)
+
+REF_REGEX = re.compile(configs.tenhou_ref_regex)
+RESULT_PT_REGEX = re.compile(configs.tenhou_result_pt_regex)
+RECORDS_REGEX = re.compile(configs.tenhou_records_regex)
 
 
 @celery.task(name='task.celery_test')
@@ -62,7 +68,13 @@ class FetchError(Exception):
         return "%s(%s)" % (type(self).__name__, self.message)
 
 
-REF_REGEX = re.compile(configs.tenhou_ref_regex)
+def check_ref(ref):
+    matches = REF_REGEX.findall(ref)
+    if not matches:
+        raise FetchError("Illegal ref: %s" % ref)
+    else:
+        ref = matches[0]
+    return ref
 
 
 @celery.task(name='task.fetch_tenhou_log_string')
@@ -76,11 +88,7 @@ def fetch_tenhou_log_string(ref):
     :param ref: ref of the Tenhou log
     :return: log's json string(unicode)
     """
-    matches = REF_REGEX.findall(ref)
-    if not matches:
-        raise FetchError("Illegal ref: %s" % ref)
-    else:
-        ref = matches[0]
+    ref = check_ref(ref)
     url = configs.tenhou_log_url
     headers = {
         "Host": url.split("/")[2],
@@ -98,7 +106,33 @@ def fetch_tenhou_log_string(ref):
     return response.text
 
 
-RECORDS_REG = re.compile(configs.tenhou_records_regex)
+def get_player_id_by_name(name, auto_create=False):
+    session = get_global_session()
+    player = session.query(Player).filter(Player.name == name)
+    if not player and auto_create:
+        player = Player(name)
+        session.add(player)
+        session.commit()
+    return player
+
+
+@celery.task(name='task.fetch_and_save_tenhou_log')
+def fetch_and_save_tenhou_log(ref, upload_user_id=None):
+    session = get_global_session()
+    ref = check_ref(ref)
+    game_log = session.query(GameLog).filter(GameLog.ref_code == ref).first()
+    if not game_log:
+        json_string = fetch_tenhou_log_string(ref)
+        game_log = GameLog(upload_user_id, json_string)
+        session.add(game_log)
+        # create GameLogAndPlayer
+        for name in game_log.player_names:
+            player = get_player_id_by_name(name, auto_create=True)
+            session.add(GameLogAndPlayer(game_log.id, player.id))
+        session.commit()
+        return 'ok'
+    else:
+        return 'already uploaded'
 
 
 @celery.task(name='task.fetch_tenhou_records')
@@ -125,3 +159,23 @@ def fetch_tenhou_records(player_name):
         return match.group("records")
     except IndexError:
         raise FetchError("Illegal records regex string: do not contains \"records\" group")
+
+
+@celery.task(name='task.fetch_and_save_tenhou_records')
+def fetch_and_save_tenhou_records(player_name):
+    session = get_global_session()
+    records_text = fetch_tenhou_records(player_name)
+    counter = 0
+    for line in records_text.split("<br>"):
+        counter += 1
+        hash_string = GameRecord.get_record_line_hash(line)
+        if session.query(hash_string).count() > 0:
+            continue
+        game_record = GameRecord(line)
+        session.add(game_record)
+        for rank, (name, pt) in enumerate(game_record.result):
+            player = get_player_id_by_name(name, auto_create=True)
+            game_record_and_player = GameRecordAndPlayer(game_record.id, player.id, pt, rank + 1)
+            session.add(game_record_and_player)
+    session.commit()
+    return '%d line records saved.' % counter
