@@ -225,7 +225,3 @@ def fetch_and_save_tenhou_records(player_name):
     session.commit()
 
     return '%d line records saved.' % len(records_lines)
-
-
-if __name__ == '__main__':
-    print fetch_and_save_tenhou_records('Rnd495')
