@@ -221,7 +221,7 @@ class GameRecord(Base):
 
 
 class GameRecordAndPlayer(Base):
-    __tablename = 'T_GameRecordAndPlayer'
+    __tablename__ = 'T_GameRecordAndPlayer'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     game_record_id = Column(Integer, nullable=False, index=Index('GameRecordAndPlayer_index_game_record_id'))
