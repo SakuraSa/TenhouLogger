@@ -106,13 +106,14 @@ def fetch_tenhou_log_string(ref):
     return response.text
 
 
-def get_player_id_by_name(name, auto_create=False):
+def get_player_id_by_name(name, auto_create=False, auto_commit=False):
     session = get_global_session()
     player = session.query(Player).filter(Player.name == name).first()
     if not player and auto_create:
         player = Player(name)
         session.add(player)
-        session.commit()
+        if auto_commit:
+            session.commit()
     return player
 
 
@@ -152,7 +153,7 @@ def fetch_tenhou_records(player_name):
     response = requests.get(url, params=params)
     if response.status_code != 200:
         raise FetchError("Illegal status: [%d]%s" % (response.status_code, response.reason))
-    match = REF_REGEX.search(response.text)
+    match = RECORDS_REGEX.search(response.text)
     if not match:
         raise FetchError("Illegal response content: can not match with r\"%s\"" % configs.tenhou_records_regex)
     try:
@@ -165,17 +166,66 @@ def fetch_tenhou_records(player_name):
 def fetch_and_save_tenhou_records(player_name):
     session = get_global_session()
     records_text = fetch_tenhou_records(player_name)
-    counter = 0
-    for line in records_text.split("<br>"):
-        counter += 1
+    records_lines = [line.strip() for line in records_text.split("<br>") if line.strip()]
+
+    # create all game_record
+    game_record_list = []
+    player_id_name_dict = dict()
+    for line in records_lines:
         hash_string = GameRecord.get_record_line_hash(line)
-        if session.query(hash_string).count() > 0:
+        if session.query(GameRecord).filter(GameRecord.hash == hash_string).count() > 0:
             continue
-        game_record = GameRecord(line)
+        try:
+            game_record = GameRecord(line)
+        except IndexError, _ex:
+            print _ex
+            continue
+        game_record_list.append(game_record)
+
+    # get all player name
+    for game_record in game_record_list:
+        for name, pt in game_record.result:
+            if name in player_id_name_dict:
+                continue
+            else:
+                player_id_name_dict[name] = None
+
+    # check all player name
+    new_player_list = []
+    for name in player_id_name_dict.keys():
+        player = session.query(Player).filter(Player.name == name).first()
+        if player:
+            player_id_name_dict[name] = player.id
+        else:
+            new_player_list.append(Player(name))
+
+    # add new player
+    for player in new_player_list:
+        session.add(player)
+
+    # add new game_record
+    for game_record in game_record_list:
         session.add(game_record)
-        for rank, (name, pt) in enumerate(game_record.result):
-            player = get_player_id_by_name(name, auto_create=True)
-            game_record_and_player = GameRecordAndPlayer(game_record.id, player.id, pt, rank + 1)
-            session.add(game_record_and_player)
+
+    # create player.id and game_record.id
     session.commit()
-    return '%d line records saved.' % counter
+
+    # get new player id
+    for player in new_player_list:
+        player_id_name_dict[player.name] = player.id
+
+    # create game_record_and_player
+    for game_record in game_record_list:
+        for rank, (name, pt) in enumerate(game_record.result):
+            player_id = player_id_name_dict[name]
+            game_record_and_player = GameRecordAndPlayer(game_record.id, player_id, pt, rank + 1)
+            session.add(game_record_and_player)
+
+    # save all
+    session.commit()
+
+    return '%d line records saved.' % len(records_lines)
+
+
+if __name__ == '__main__':
+    print fetch_and_save_tenhou_records('Rnd495')
