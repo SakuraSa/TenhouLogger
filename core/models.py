@@ -137,8 +137,8 @@ class GameLog(Base):
         self.upload_user_id = upload_user_id
         self.upload_time = datetime.datetime.now()
         self.json = json_string
-        self.extract_info_from_json()
         self.player_names = None
+        self.extract_info_from_json()
 
     def extract_info_from_json(self):
         js = json.loads(self.json)
