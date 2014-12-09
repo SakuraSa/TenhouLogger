@@ -108,7 +108,7 @@ def fetch_tenhou_log_string(ref):
 
 def get_player_id_by_name(name, auto_create=False):
     session = get_global_session()
-    player = session.query(Player).filter(Player.name == name)
+    player = session.query(Player).filter(Player.name == name).first()
     if not player and auto_create:
         player = Player(name)
         session.add(player)
