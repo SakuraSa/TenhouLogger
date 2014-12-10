@@ -12,6 +12,7 @@ import re
 import os
 import json
 import time
+import urllib
 
 import requests
 from celery import exceptions as celery_exceptions
@@ -245,3 +246,13 @@ def fetch_and_save_tenhou_records(player_name):
     session.commit()
 
     return '%d line records saved.' % len(records_lines)
+
+
+def kick_player_from_tenhou_room(room_id, player_name):
+    url = configs.tenhou_kick_api_url
+    data = {
+        "L": room_id,
+        "UN": player_name
+    }
+    rsp = requests.post(url, data=data)
+    return urllib.unquote(rsp.url[54:]).strip() == "OK"
