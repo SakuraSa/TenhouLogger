@@ -4,6 +4,7 @@
 """
 core.tasks
 """
+import datetime
 
 __author__ = 'Rnd495'
 
@@ -168,6 +169,22 @@ def fetch_and_save_tenhou_records(player_name):
     records_text = fetch_tenhou_records(player_name)
     records_lines = [line.strip() for line in records_text.split("<br>") if line.strip()]
 
+    # check query target player
+    player = session.query(Player).filter(Player.name == player_name).first()
+    if not player:
+        player = Player(player_name)
+        session.add(player)
+        session.commit()
+
+    # check frequency
+    now = datetime.datetime.now()
+    check_point = now + datetime.timedelta(days=1)
+    if not player.last_check_records_time or player.last_check_records_time > check_point:
+        player.last_check_records_time = now
+        session.commit()
+    else:
+        return "player was checked in %s, please wait for 1 day" % player.last_check_records_time
+
     # create all game_record
     game_record_list = []
     player_id_name_dict = dict()
@@ -181,6 +198,9 @@ def fetch_and_save_tenhou_records(player_name):
             print _ex
             continue
         game_record_list.append(game_record)
+
+    if len(game_record_list) == 0:
+        return "player \"%s\" is not found" % player_name
 
     # get all player name
     for game_record in game_record_list:

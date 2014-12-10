@@ -94,3 +94,21 @@ class APIGameLogRefUpload(PageBase):
             self.write({'success': False, 'message': repr(_ex)})
         finally:
             self.finish()
+
+
+@mapping('/api/player_name_check')
+class APIPlayerNameCheck(PageBase):
+    """
+    APIPlayerNameCheck
+    """
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def post(self):
+        player_name = self.get_body_argument('name')
+        try:
+            message = yield celery.async(tasks.fetch_and_save_tenhou_records, player_name=player_name)
+            self.write({'success': True, 'message': message})
+        except tasks.FetchError, _ex:
+            self.write({'success': False, 'message': repr(_ex)})
+        finally:
+            self.finish()
