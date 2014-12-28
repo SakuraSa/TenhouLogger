@@ -1,7 +1,6 @@
 $(function () {
     var inputUsername = $('input[name="username"]');
     var inputPassword = $('input[name="password"]');
-    var inputPasswordConfirm = $('input[name="password_confirm"]');
 
     var set_normal = function(inputObj) {
         var parent = inputObj.parent();
@@ -33,7 +32,7 @@ $(function () {
     validate(inputUsername, function() {
         var username = inputUsername.val();
         $.get('/api/get_username_availability?username=' + username, function (data, status) {
-            if(data['availability']) {
+            if(!data['availability']) {
                 set_success(inputUsername);
             }else {
                 set_error(inputUsername);
@@ -47,16 +46,6 @@ $(function () {
             set_success(inputPassword);
         }else {
             set_error(inputPassword);
-        }
-    });
-
-    validate(inputPasswordConfirm, function() {
-        var password = inputPassword.val();
-        var passwordConfirm = inputPasswordConfirm.val();
-        if(password == passwordConfirm && passwordConfirm) {
-            set_success(inputPasswordConfirm);
-        }else {
-            set_error(inputPasswordConfirm);
         }
     });
 });

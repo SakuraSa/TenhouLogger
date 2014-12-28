@@ -12,8 +12,14 @@
 <div class="container">
   <form class="form-login" role="form" action="/login" method="post">
     <h2 class="form-login-heading">登陆</h2>
-    <input type="text" name="username" class="form-control" placeholder="昵称" required autofocus>
-    <input type="password" name="password" class="form-control" placeholder="密码" required>
+    <div class="form-group has-feedback">
+      <label class="control-label" for="input-username">昵称：</label>
+      <input type="text" name="username" id="input-username" maxlength="20" class="form-control" placeholder="昵称" required autofocus>
+    </div>
+    <div class="form-group has-feedback">
+      <label class="control-label" for="input-password">密码：</label>
+      <input type="password" name="password" id="input-password" class="form-control" placeholder="密码" required>
+    </div>
     {% module verification() %}
     <div class="checkbox">
       <label>
@@ -25,4 +31,7 @@
     </button>
   </form>
 </div>
+{% end %}
+{% block html_tail %}
+<script src="/static/js/validation-login.js"></script>
 {% end %}
