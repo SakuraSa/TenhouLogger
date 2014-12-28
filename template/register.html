@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block html_head %}
-<link href="/static/css/login.css" rel="stylesheet">
+<link href="/static/css/register.css" rel="stylesheet">
 {% end %}
-{% block title %}登陆{% end %}
+{% block title %}注册{% end %}
 {% block header %}
 <div class="container">
   <div class="span12">{% module title(title='天凤记录站', subtitle='记录你的游戏轨迹') %}</div>
@@ -10,18 +10,14 @@
 {% end %}
 {% block body %}
 <div class="container">
-  <form class="form-login" role="form" action="/login" method="post">
+  <form class="form-login" role="form" action="/register" method="post">
     <h2 class="form-login-heading">登陆</h2>
     <input type="text" name="username" class="form-control" placeholder="昵称" required autofocus>
     <input type="password" name="password" class="form-control" placeholder="密码" required>
+    <input type="password" name="password_confirm" class="form-control" placeholder="密码确认" required>
     {% module verification() %}
-    <div class="checkbox">
-      <label>
-        <input type="checkbox" value="remember-me" name="remember-me"> 记住我
-      </label>
-    </div>
     <button class="btn btn-lg btn-primary btn-block" type="submit">
-      登陆
+      注册
     </button>
   </form>
 </div>

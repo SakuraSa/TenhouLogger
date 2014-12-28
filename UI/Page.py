@@ -91,6 +91,43 @@ class PageLogout(PageBase):
         self.redirect(redirect)
 
 
+@mapping('/register')
+class PageRegister(PageBase):
+    """
+    PageRegister
+    """
+    def __init__(self, application, request, **kwargs):
+        PageBase.__init__(self, application, request, **kwargs)
+
+    def get(self):
+        self.render('register.html')
+
+    @verification.check
+    def post(self):
+        username = self.get_body_argument('username')
+        password = self.get_body_argument('password')
+        password_confirm = self.get_body_argument('password_confirm')
+
+        # register param check
+        # password confirm
+        if password != password_confirm:
+            raise tornado.web.HTTPError(400, log_message='password dismatch with password confirm.')
+        # username availability check
+        result = APIGetUsernameAvailability.check(username=username, check_exists=True)
+        if not result['availability']:
+            raise tornado.web.HTTPError(400, log_message=result['reason'])
+        # username availability check
+        if not password:
+            raise tornado.web.HTTPError(400, log_message='password can not be empty')
+
+        # register new user
+        user = core.models.User(name=username, pwd=password, role_id=3, calculate_point=1000)
+        self.db.add(user)
+        self.db.commit()
+
+        # redirect to login page
+        self.redirect('/login')
+
 @mapping('/')
 class PageHome(PageBase):
     """
@@ -113,9 +150,18 @@ class APIGetUsernameAvailability(PageBase):
     APIGetUsernameAvailability
     """
     def get(self):
-        name = self.get_query_argument('username')
-        user_count = self.db.query(User).filter(User.name == name).count()
-        self.write({'success': True, 'message': user_count == 0})
+        username = self.get_query_argument('username')
+        self.write(APIGetUsernameAvailability.check(username=username, check_exists=True))
+
+    @classmethod
+    def check(cls, username, check_exists=True):
+        if not username:
+            return dict(availability=False, reason='username can not be empty.')
+        if len(username) > 16:
+            return dict(availability=False, reason='username "%s" is too long.' % username)
+        if check_exists and core.models.get_global_session().query(User).filter(User.name == username).count() > 0:
+            return dict(availability=False, reason='username "%s" is already exists.' % username)
+        return dict(availability=True, reason='ok')
 
 
 @mapping('/api/game_log_ref_upload')
