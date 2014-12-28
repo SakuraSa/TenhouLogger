@@ -1,5 +1,10 @@
-<input type="text" id="ver_code" name="ver_code" class="form-control" placeholder="验证码" maxlength="{{ len(code.code) }}" required>
+<div id="ver-code-input-group" class="form-group">
+  <label class="control-label" for="ver_code">验证码：</label>
+  <input type="text" id="ver_code" name="ver_code" class="form-control" placeholder="验证码" maxlength="{{ len(code.code) }}" required>
+  <input type="hidden" id="ver_uuid" name="ver_uuid" value="{{ code.uuid }}">
+</div>
 <div style="display: none">
-  <input type="hidden" name="ver_uuid" value="{{ code.uuid }}">
-  <img id="ver_image" src="{{ code.image }}">
+  <div id="ver-code-container">
+    <a href="javascript:" id="ver_image_refresh_button"><img id="ver_image" class="img-responsive img-rounded" src="{{ code.image }}"></a>
+  </div>
 </div>

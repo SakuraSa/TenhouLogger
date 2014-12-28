@@ -1,19 +1,40 @@
-window.onload = function(){
-  var ver_code_input = $("input#ver_code");
-  var image = $("img#ver_image");
-  var container = $("<div></div>");
-  container.append(image);
+$(function(){
+  var input_group = $("#ver-code-input-group");
+  var ver_code_input = input_group.find("#ver_code");
+  var ver_uuid_input = input_group.find("#ver_uuid");
+  var container = $("#ver-code-container");
+  var image = container.find("#ver_image");
+  var reload_function = function () {
+    image.attr('src', '/static/image/icon/loading.gif');
+    $.get('/api/create_verification_code', function(code, status) {
+      ver_uuid_input.val(code.uuid);
+      ver_code_input.val('');
+      image.attr('src', code.image);
+    });
+  };
+  image.click(function() {
+    reload_function();
+    ver_code_input.focus();
+  });
   ver_code_input.popover({
     trigger:"manual",
     title:"验证码",
     html:true,
     placement:"top",
-    content:container.html()
+    content:container
   });
+  var ready_to_hide = false;
   ver_code_input.focus(function () {
+    ready_to_hide = false;
     ver_code_input.popover('show');
   });
   ver_code_input.blur(function () {
-    ver_code_input.popover('hide');
+    ready_to_hide = true;
+    setTimeout(function(){
+      if(ready_to_hide) {
+        ver_code_input.popover('hide');
+        ready_to_hide = false;
+      }
+    }, 1000);
   });
-};
+});

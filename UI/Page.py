@@ -149,6 +149,9 @@ class APIGetUsernameAvailability(PageBase):
     """
     APIGetUsernameAvailability
     """
+    def __init__(self, application, request, **kwargs):
+        PageBase.__init__(self, application, request, **kwargs)
+
     def get(self):
         username = self.get_query_argument('username')
         self.write(APIGetUsernameAvailability.check(username=username, check_exists=True))
@@ -164,11 +167,27 @@ class APIGetUsernameAvailability(PageBase):
         return dict(availability=True, reason='ok')
 
 
+@mapping('/api/create_verification_code')
+class APICreateVerificationCode(PageBase):
+    """
+    APICreateVerificationCode
+    """
+    def __init__(self, application, request, **kwargs):
+        PageBase.__init__(self, application, request, **kwargs)
+
+    def get(self):
+        code = verification.Verification.instance().new()
+        self.write({'uuid': code.uuid, 'image': code.image})
+
+
 @mapping('/api/game_log_ref_upload')
 class APIGameLogRefUpload(PageBase):
     """
     APIGameLogRefUpload
     """
+    def __init__(self, application, request, **kwargs):
+        PageBase.__init__(self, application, request, **kwargs)
+
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def post(self):
@@ -189,6 +208,9 @@ class APIPlayerNameCheck(PageBase):
     """
     APIPlayerNameCheck
     """
+    def __init__(self, application, request, **kwargs):
+        PageBase.__init__(self, application, request, **kwargs)
+
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def post(self):
