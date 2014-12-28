@@ -3,6 +3,11 @@
 <link href="/static/css/login.css" rel="stylesheet">
 {% end %}
 {% block title %}登陆{% end %}
+{% block header %}
+<div class="container">
+  <div class="span12">{% module title(title='Tenhou Logger', subtitle='your records show') %}</div>
+</div>
+{% end %}
 {% block body %}
 <div class="container">
   <form class="form-login" role="form" action="/login" method="post">
