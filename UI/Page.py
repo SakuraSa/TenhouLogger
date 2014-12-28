@@ -55,7 +55,7 @@ class PageLogin(PageBase):
     PageLogin
     """
     def __init__(self, application, request, **kwargs):
-        tornado.web.RequestHandler.__init__(self, application, request, **kwargs)
+        PageBase.__init__(self, application, request, **kwargs)
 
     def get(self):
         return self.render('login.html')
@@ -75,6 +75,17 @@ class PageLogin(PageBase):
             self.set_secure_cookie("user_id", str(user.id), expire)
             self.redirect(redirect)
 
+
+@mapping('/')
+class PageHome(PageBase):
+    """
+    PageHome
+    """
+    def __init__(self, application, request, **kwargs):
+        PageBase.__init__(self, application, request, **kwargs)
+
+    def get(self):
+        return self.render('home.html')
 
 @mapping('/api/game_log_ref_upload')
 class APIGameLogRefUpload(PageBase):
