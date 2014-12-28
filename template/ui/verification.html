@@ -1,4 +1,4 @@
-<div id="ver-code-input-group" class="form-group">
+<div id="ver-code-input-group" class="form-group has-feedback">
   <label class="control-label" for="ver_code">验证码：</label>
   <input type="text" id="ver_code" name="ver_code" class="form-control" placeholder="验证码" maxlength="{{ len(code.code) }}" required>
   <input type="hidden" id="ver_uuid" name="ver_uuid" value="{{ code.uuid }}">

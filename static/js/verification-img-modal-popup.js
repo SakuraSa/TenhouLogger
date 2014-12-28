@@ -10,6 +10,8 @@ $(function(){
       ver_uuid_input.val(code.uuid);
       ver_code_input.val('');
       image.attr('src', code.image);
+      input_group.removeClass('has-error').removeClass('has-success');
+      input_group.remove("span");
     });
   };
   image.click(function() {
@@ -26,7 +28,8 @@ $(function(){
   var ready_to_hide = false;
   ver_code_input.focus(function () {
     ready_to_hide = false;
-    ver_code_input.popover('show');
+    if(!ver_code_input.attr('readonly'))
+      ver_code_input.popover('show');
   });
   ver_code_input.blur(function () {
     ready_to_hide = true;
@@ -36,5 +39,20 @@ $(function(){
         ready_to_hide = false;
       }
     }, 1000);
+  });
+  ver_code_input.blur(function () {
+    ver_code_input.val(ver_code_input.val().toUpperCase().replace(/[^ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890]/g, ""));
+    if(ver_code_input.val().length == ver_code_input.attr('maxlength')) {
+      $.get("/api/check_verification_code?ver_uuid=" + ver_uuid_input.val() +"&ver_code=" + ver_code_input.val(), function(result, status) {
+        if(result["ok"]) {
+          input_group.addClass('has-success');
+          input_group.append($("span").attr("class", "glyphicon glyphicon-ok form-control-feedback"));
+          ver_code_input.attr("readonly", "true");
+        }else {
+          input_group.addClass('has-error');
+          input_group.append($("span").attr("class", "glyphicon glyphicon-remove form-control-feedback"));
+        }
+      })
+    }
   });
 });

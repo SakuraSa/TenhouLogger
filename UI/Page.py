@@ -180,6 +180,25 @@ class APICreateVerificationCode(PageBase):
         self.write({'uuid': code.uuid, 'image': code.image})
 
 
+@mapping('/api/check_verification_code')
+class APICheckVerificationCode(PageBase):
+    """
+    APICheckVerificationCode
+    """
+    def __init__(self, application, request, **kwargs):
+        PageBase.__init__(self, application, request, **kwargs)
+
+    def get(self):
+        try:
+            code = self.get_argument("ver_code")
+            uuid = self.get_argument("ver_uuid")
+        except tornado.web.HTTPError:
+            self.write({'success': False, 'ok': False})
+            return
+        ok = verification.Verification.instance().check(uuid, code)
+        self.write({'success': True, 'ok': ok})
+
+
 @mapping('/api/game_log_ref_upload')
 class APIGameLogRefUpload(PageBase):
     """
