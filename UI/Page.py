@@ -67,13 +67,28 @@ class PageLogin(PageBase):
         password = User.password_hash(password)
         remember = self.get_body_argument('remember-me', None)
         expire = 30 if remember else 1
-        redirect = self.get_argument('next', '/')
         user = self.db.query(User).filter(User.name == username, User.pwd == password).first()
         if not user:
+            redirect = self.get_argument('next', '/')
             self.redirect('/login?next=%s' % redirect)
         else:
             self.set_secure_cookie("user_id", str(user.id), expire)
+            redirect = self.get_argument('next', '/user/dashboard?user_id=%d' % user.id)
             self.redirect(redirect)
+
+
+@mapping('/logout')
+class PageLogout(PageBase):
+    """
+    PageLogout
+    """
+    def __init__(self, application, request, **kwargs):
+        PageBase.__init__(self, application, request, **kwargs)
+
+    def get(self):
+        self.clear_cookie('user_id')
+        redirect = self.get_argument('next', '/')
+        self.redirect(redirect)
 
 
 @mapping('/')
@@ -85,7 +100,23 @@ class PageHome(PageBase):
         PageBase.__init__(self, application, request, **kwargs)
 
     def get(self):
-        return self.render('home.html')
+        user = self.current_user
+        if user:
+            self.redirect('/user/dashboard?user_id=%d' % user.id)
+        else:
+            return self.render('home.html')
+
+
+@mapping('/api/get_username_availability')
+class APIGetUsernameAvailability(PageBase):
+    """
+    APIGetUsernameAvailability
+    """
+    def get(self):
+        name = self.get_query_argument('username')
+        user_count = self.db.query(User).filter(User.name == name).count()
+        self.write({'success': True, 'message': user_count == 0})
+
 
 @mapping('/api/game_log_ref_upload')
 class APIGameLogRefUpload(PageBase):
