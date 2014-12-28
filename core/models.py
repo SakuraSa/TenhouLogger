@@ -31,7 +31,7 @@ class User(Base):
     __tablename__ = 'T_User'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(length=64), nullable=False)
+    name = Column(String(length=64), nullable=False, unique=True, index=Index('User_index_name'))
     pwd = Column(String(length=128), nullable=False)
     role_id = Column(Integer, nullable=False, index=Index('User_index_role_id'))
     register_time = Column(DateTime, nullable=False)
