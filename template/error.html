@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}出错了{% end %}
+{% block body %}
+<div class="container">
+  <div class="span12">{% module title(title='出错啦', subtitle='可恶的bug') %}</div>
+  <div class="jumbotron">
+    <h1>HTTP {{ status_code }}</h1>
+    <p>非常抱歉，服务器无法正常相应您的请求。</p>
+    <p>服务器在处理您的请求期间，发生了意料之外的错误。</p>
+    {% if message %}
+      <pre class="bg-danger">{{ message }}</pre>
+    {% end %}
+    <p>
+      <a class="btn btn-lg btn-primary" href="javascript:window.history.back();" role="button">返回</a>
+    </p>
+  </div>
+</div>
+{% end %}

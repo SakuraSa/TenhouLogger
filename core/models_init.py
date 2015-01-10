@@ -61,3 +61,4 @@ def init():
     # create roleAndModel
     for model in session.query(models.Model):
         session.add(models.RoleAndModel(1, model.id))
+    session.commit()

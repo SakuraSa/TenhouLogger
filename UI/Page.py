@@ -7,6 +7,8 @@ Page
 
 __author__ = 'Rnd495'
 
+import traceback
+
 import tornado.web
 import tornado.gen
 
@@ -20,6 +22,33 @@ from UI.Manager import mapping
 
 configs = Configs.instance()
 celery = CeleryIOLoop()
+
+
+class Interruption(Exception):
+    """
+    Interruption
+    """
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+    def render(self, page):
+        raise NotImplementedError()
+
+
+class NoticeAndRedirectInterruption(Interruption):
+    """
+    NoticeAndRedirectInterruption
+    """
+    JUMP_BACK = '@JUMP_BACK'
+
+    def __init__(self, message, title='Notice', redirect_to=None, countdown=3):
+        self.message = message
+        self.title = title
+        self.countdown = countdown
+        self.redirect_to = redirect_to if redirect_to is not None else NoticeAndRedirectInterruption.JUMP_BACK
+
+    def render(self, page):
+        pass
 
 
 class PageBase(tornado.web.RequestHandler):
@@ -47,6 +76,17 @@ class PageBase(tornado.web.RequestHandler):
 
     def data_received(self, chunk):
         return tornado.web.RequestHandler.data_received(self, chunk)
+
+    def write_error(self, status_code, **kwargs):
+        error = kwargs.pop('exc_info')[0]
+        if isinstance(error, Interruption):
+            error.render(self)
+        else:
+            if configs.show_error_details:
+                message = traceback.format_exc()
+            else:
+                message = None
+            self.render('error.html', status_code=status_code, message=message)
 
 
 @mapping('/login')
@@ -128,6 +168,7 @@ class PageRegister(PageBase):
         # redirect to login page
         self.redirect('/login')
 
+
 @mapping('/')
 class PageHome(PageBase):
     """
@@ -142,6 +183,19 @@ class PageHome(PageBase):
             self.redirect('/user/dashboard?user_id=%d' % user.id)
         else:
             return self.render('home.html')
+
+
+@mapping('/user/dashboard')
+class PageUserDashboard(PageBase):
+    """
+    PageUserDashboard
+    """
+    def __init__(self, application, request, **kwargs):
+        PageBase.__init__(self, application, request, **kwargs)
+
+    def get(self):
+        raise ValueError()
+        self.render("dashboardBase.html")
 
 
 @mapping('/api/get_username_availability')
